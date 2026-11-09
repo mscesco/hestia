@@ -23,7 +23,9 @@ Rodar (após `colcon build` + source do install):
 Ou direto pelo caminho (usa o shim de sys.path abaixo):
   python3 .../hestia_robot/gerenciador_chamados.py --ros-args -p use_sim_time:=true
 
-Precisa do Nav2 no ar (localizacao.launch.py) e da pose inicial dada ao AMCL.
+Precisa do Nav2 no ar (localizacao_blender.launch.py ou
+localizacao_blender_simples.launch.py) — normalmente subido pelos scripts
+iniciar_hestia_blender*.sh, que já iniciam este nó.
 """
 
 import heapq

@@ -11,7 +11,7 @@ Parâmetros ROS (podem ser passados por --ros-args -p):
 
 Rodar (após `colcon build` + source do install):
   ros2 run hestia_robot no_ponte
-Precisa do AMCL no ar (localizacao.launch.py) e da ponte rodando
+Precisa do Nav2/pose no ar (localizacao_blender*.launch.py) e da ponte rodando
 (`uvicorn servidor:app` em ../../ponte).
 
 Câmera "pelos olhos do robô": resolvida no Godot (painel picture-in-picture,

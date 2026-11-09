@@ -1,8 +1,8 @@
 #!/bin/bash
 # =====================================================================
-# iniciar_hestia_blender.sh — sobe o sistema Héstia na CASA DO BLENDER.
-# Igual ao iniciar_hestia.sh, mas usa localizacao_blender.launch.py
-# (mundo casa_blender.world + mapa casa_blender.yaml) e pose inicial (0,6).
+# iniciar_hestia_blender.sh — sobe o sistema Héstia na CASA DO BLENDER (com AMCL).
+# Usa localizacao_blender.launch.py (mundo casa_blender.world + mapa
+# casa_blender.yaml) e pose inicial (0,6).
 #   wsl -d Ubuntu-22.04 -u root bash /mnt/c/.../hestia/iniciar_hestia_blender.sh
 # Para derrubar: bash parar_hestia.sh
 # =====================================================================

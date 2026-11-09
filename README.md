@@ -24,7 +24,7 @@ cuidador. Cada disciplina do semestre governa uma camada desse fluxo.
 
 ## 1. Robótica (Navegação Autônoma)
 
-- **Plataforma:** ROS 2 Humble, simulação no Gazebo (mundo `turtlebot3_house`).
+- **Plataforma:** ROS 2 Humble, simulação no Gazebo (casa modelada no Blender, `casa_blender.world`).
 - **Navegação em malha fechada:** localização contínua por sensor, sem execução em malha aberta.
 - **Mapeamento:** mapa da casa gerado previamente por SLAM (`slam_toolbox`) e salvo (`.pgm` + `.yaml`).
 - **Localização:** AMCL (localização de Monte Carlo adaptativa) sobre o mapa salvo.
@@ -88,7 +88,7 @@ hestia/
 │       ├── hestia_robot/     # código Python (nós, modelos, pipeline)
 │       ├── launch/           # bringup: SLAM (Sem.2), AMCL+Nav2 (Sem.3), sistema (Sem.7)
 │       ├── config/           # nav2_params.yaml, waypoints da ronda
-│       ├── maps/             # mapa salvo pelo SLAM (casa.pgm + casa.yaml)
+│       ├── maps/             # mapa da casa do Blender (casa_blender.pgm + .yaml)
 │       └── rviz/             # layouts do RViz2 para ver a navegação
 ├── ponte/                    # servidor FastAPI (ponte ROS <-> Godot, alvo do pentest)
 ├── interface_godot/          # projeto Godot (usa models/casa.glb exportada do Blender)

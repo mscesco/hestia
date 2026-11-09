@@ -1,17 +1,15 @@
-# maps/ — mapa da casa (saída da Semana 2) ✅
+# maps/ — mapa da casa (casa do Blender)
 
-**PRONTO.** Os dois arquivos já existem, gerados por SLAM (`slam_toolbox`) e salvos:
+O mapa de ocupação que o Nav2 usa para localização e planejamento:
 
-- `casa.pgm`  — a imagem do mapa (ocupação: preto=parede, branco=livre, cinza=fora).
-- `casa.yaml` — os metadados (resolução 0.05 m/célula, origem) que apontam para o `.pgm`.
+- `casa_blender.pgm` — a imagem do mapa (preto=parede, branco=livre, cinza=desconhecido).
+- `casa_blender.yaml` — metadados (resolução 0.05 m/célula, origem `[-9.6, -3.6]`)
+  que apontam para o `.pgm`.
 
-O mapeamento foi feito com o `launch/mapear.launch.py` (Gazebo + SLAM + Nav2) +
-o explorador autônomo por fronteiras `scripts/explorador_nav2.py` dirigindo o
-robô. Na Semana 3 o AMCL se localiza sobre este mapa. Para remapear (casa nova),
-veja o comando abaixo.
+Este mapa foi gerado **fatiando o mesh da casa do Blender**
+(`worlds/casa_blender/casa_blender.obj`) na altura do laser, então já está
+**alinhado** ao mundo do Gazebo (`casa_blender.world`) — escala 1, sem offset.
+O AMCL (plano A) ou a TF estática (plano B) se localizam sobre ele.
 
-Salva-se com:  `ros2 run nav2_map_server map_saver_cli -f ~/.../maps/casa`
-
-A partir do momento em que estes dois existem, você NÃO depende mais do SLAM ao
-vivo — o AMCL (Semana 3) se localiza sobre este mapa salvo. É o portão de saída
-da Semana 2.
+Para gerar o mapa de uma casa nova com SLAM, salve com:
+`ros2 run nav2_map_server map_saver_cli -f ~/.../maps/<nome>`
