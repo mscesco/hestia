@@ -16,6 +16,10 @@ setup(
         ("share/" + package_name + "/config", glob("config/*.yaml")),
         ("share/" + package_name + "/maps", glob("maps/*.pgm") + glob("maps/*.yaml")),
         ("share/" + package_name + "/rviz", glob("rviz/*.rviz")),
+        # scripts/ precisa ser instalado: o launch do plano B roda o
+        # pose_tf_bridge.py pelo caminho instalado (share/.../scripts/).
+        ("share/" + package_name + "/scripts",
+         glob("scripts/*.py") + glob("scripts/*.sh")),
     ],
     install_requires=["setuptools"],
     zip_safe=True,
