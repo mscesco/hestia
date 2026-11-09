@@ -11,7 +11,9 @@ Sobe:
   4) Nav2 em modo localização (map_server servindo casa_blender.yaml + AMCL +
      planner/controller/bt_navigator), use_sim_time=true.
 
-Não sobe RViz nem gzclient (demo roda headless; a visualização é o Godot).
+RViz: sobe por padrão (arg `rviz:=true`) para a avaliação da robótica (nuvem de
+partículas do AMCL, custo, caminho do Nav2). Para rodar headless (só Godot),
+passe `rviz:=false`. gzclient continua desligado.
 O frame do Gazebo = frame do Blender, então o Godot alinha sem offset.
 """
 
@@ -20,8 +22,10 @@ import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, ExecuteProcess, IncludeLaunchDescription, TimerAction
+from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
 _PKG = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -44,6 +48,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "params_file",
             default_value=os.path.join(_PKG, "config", "nav2_params.yaml")),
+        DeclareLaunchArgument("rviz", default_value="true"),
     ]
 
     # 1) Gazebo headless com a casa do Blender (plugins init+factory explicitos)
@@ -84,4 +89,16 @@ def generate_launch_description():
         )
     ])
 
-    return LaunchDescription(args + [gzserver, rsp, spawn, nav2])
+    # 5) RViz (opcional, ligado por padrão) — visão de robótica para a avaliação
+    rviz = TimerAction(period=8.0, actions=[
+        Node(
+            package="rviz2", executable="rviz2", name="rviz2",
+            arguments=["-d", PathJoinSubstitution(
+                [pkg_nav2, "rviz", "nav2_default_view.rviz"])],
+            parameters=[{"use_sim_time": use_sim_time}],
+            output="screen",
+            condition=IfCondition(LaunchConfiguration("rviz")),
+        )
+    ])
+
+    return LaunchDescription(args + [gzserver, rsp, spawn, nav2, rviz])

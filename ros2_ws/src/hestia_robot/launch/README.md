@@ -2,14 +2,26 @@
 
 Um launch file liga vários nós de uma vez, com os parâmetros certos, num
 comando só. Sem isso, cada teste vira 5 comandos manuais e a integração
-(Semana 7) vira um inferno. Ainda **vazio de propósito** — cada arquivo abaixo
-é escrito na semana indicada.
+vira um inferno.
 
-| Arquivo                | Semana | O que faz |
-|------------------------|--------|-----------|
-| `slam.launch.py` ✅     | 2      | **PRONTO.** Sobe Gazebo (`turtlebot3_house`) + `slam_toolbox` + RViz para MAPEAR a casa. |
-| `localizacao.launch.py` ✅ | 3   | **PRONTO.** Sobe Gazebo + Nav2 + AMCL sobre o `maps/casa.yaml` + RViz (malha fechada). |
-| `sistema.launch.py`    | 7      | Tudo acima + `gerenciador_chamados` + `no_ponte` (integração ponta a ponta). |
+**Casa do Blender (fluxo atual):**
 
+| Arquivo | O que faz |
+|---------|-----------|
+| `localizacao_blender.launch.py` ⭐ | **PRINCIPAL.** Gazebo (`casa_blender.world`) + Nav2 + **AMCL** sobre `maps/casa_blender.yaml` + spawn em (0,6) + RViz (arg `rviz`, padrão on). |
+| `localizacao_blender_simples.launch.py` 🛟 | **PLANO B (garante a demo).** Igual, mas **SEM AMCL**: TF estática `map->odom` (0,6) + odometria do Gazebo + `pose_tf_bridge` (publica `/amcl_pose`) + map_server + Nav2 navegação + RViz. Use se o AMCL divergir. |
+
+**Casa do TurtleBot3 (legado / fallback) e mapeamento:**
+
+| Arquivo | O que faz |
+|---------|-----------|
+| `localizacao.launch.py` | Nav2 + AMCL sobre `maps/casa.yaml` (turtlebot3_house) + RViz. Fallback do fluxo antigo. |
+| `slam.launch.py` | Gazebo (`turtlebot3_house`) + `slam_toolbox` + RViz para MAPEAR. |
+| `mapear.launch.py` | Gazebo + SLAM + Nav2 para exploração autônoma (`scripts/explorador_nav2.py`). |
+
+> A integração ponta a ponta (ponte + `no_ponte` + `gerenciador_chamados`) é
+> subida pelos scripts da raiz `iniciar_hestia_blender.sh` (com AMCL) e
+> `iniciar_hestia_blender_simples.sh` (plano B), não por um launch único.
+>
 > Para o ROS instalar esta pasta, ela já está declarada no `setup.py`
-> (`data_files`). É só criar os arquivos aqui e rodar `colcon build`.
+> (`data_files`). Após criar/editar arquivos aqui, rode `colcon build`.

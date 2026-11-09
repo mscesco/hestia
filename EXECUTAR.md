@@ -10,6 +10,48 @@ qual terminal, em qual ordem**, para o sistema inteiro ficar de pé.
 
 ---
 
+## ⭐ Caminho recomendado para a demo (casa do Blender, 1 comando)
+
+As seções 1–6 abaixo descrevem o fluxo manual (casa do TurtleBot3, bom como
+fallback). Para a **casa do Blender** (fluxo atual), use os scripts da raiz —
+eles sobem tudo na ordem certa:
+
+```bash
+# pré-requisito (uma vez): laser 16 m + build do workspace
+cd /mnt/c/Users/Usuario/Documents/hestia
+bash ros2_ws/src/hestia_robot/scripts/ajustar_laser_16m.sh
+cd ros2_ws && colcon build --symlink-install && source install/setup.bash && cd ..
+
+export TURTLEBOT3_MODEL=burger
+
+# A) com AMCL (localização "de verdade") + RViz:
+bash iniciar_hestia_blender.sh
+
+# B) PLANO B — se o AMCL divergir, localização cravada de simulação + RViz:
+bash iniciar_hestia_blender_simples.sh
+```
+
+Depois abra o Godot no Windows (`godot --path interface_godot`). Dispare os
+chamados para mostrar a **preempção**:
+
+```bash
+bash ros2_ws/src/hestia_robot/scripts/publica_chamado.sh agua  PEDIDO_COMUM  5.0 -1.9
+bash ros2_ws/src/hestia_robot/scripts/publica_chamado.sh queda EMERGENCIA  -7.9 11.45
+```
+
+Derrubar tudo: `bash parar_hestia.sh`. Ambos os launches abrem o **RViz** por
+padrão (nuvem de partículas/custo/caminho); para rodar sem RViz, acrescente
+`rviz:=false` ao `ros2 launch`.
+
+> **Plano A vs B:** o A usa AMCL (casa o laser com o mapa — é a localização
+> "robótica de verdade", melhor de explicar na prova, mas ainda pode divergir em
+> áreas abertas desta casa). O B troca o AMCL por uma TF estática `map->odom` +
+> odometria do Gazebo (localização perfeita de simulação) — garante a demo
+> rodando lisa; honestamente, não é localização "real", então prefira o A se ele
+> estiver convergindo.
+
+---
+
 ## 0. Checklist antes de começar (uma vez por sessão/dia)
 
 ```bash
