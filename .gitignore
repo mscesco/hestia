@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# ROS 2
+ros2_ws/build/
+ros2_ws/install/
+ros2_ws/log/
+
+# Godot (Godot 4)
+interface_godot/.godot/
+interface_godot/android/
+interface_godot/.import/
+
+# Pentest — NÃO versionar evidências sensíveis por engano
+pentest/evidencias/
+
+# SO
+.DS_Store
+Thumbs.db

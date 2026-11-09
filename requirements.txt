@@ -1,0 +1,18 @@
+# Dependências pip do projeto Héstia.
+#
+# IMPORTANTE: este arquivo NÃO inclui o núcleo do ROS 2.
+# rclpy, nav2, slam_toolbox, gazebo, AMCL vêm por APT (ver SETUP.md), não por pip.
+# Aqui ficam só os extras Python que o ROS não traz.
+#
+# Versões deixadas soltas de propósito: rode o projeto, e quando funcionar,
+# congele com `pip freeze > requirements.txt` para travar as versões que
+# comprovadamente rodam (e commite junto do requirements_sala.txt).
+
+# --- Ponte (servidor FastAPI) ---
+fastapi
+uvicorn[standard]
+pydantic
+python-jose[cryptography]   # JWT — correção do pentest (Semana 6)
+
+# --- Nó ROS que publica na ponte (no_ponte.py) + exploit do pentest ---
+requests

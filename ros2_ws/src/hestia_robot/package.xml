@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>hestia_robot</name>
+  <version>0.1.0</version>
+  <description>Robô de assistência Héstia — navegação, chamados e ponte.</description>
+  <maintainer email="equipe@exemplo.com">Equipe Héstia</maintainer>
+  <license>MIT</license>
+
+  <depend>rclpy</depend>
+  <depend>nav2_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>sensor_msgs</depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

@@ -1,0 +1,7 @@
+fastapi
+uvicorn                     # NAO usar uvicorn[standard] no Python 3.15: o extra puxa
+                            # pyyaml, que ainda nao tem wheel p/ 3.15 e falha ao compilar.
+                            # O servidor roda com uvicorn puro (sem --reload).
+pydantic
+# python-jose[cryptography]  # NAO necessario: servidor.py implementa o JWT HS256 na mao
+#                            # (hmac/hashlib/base64). Reative so se for trocar por lib externa.

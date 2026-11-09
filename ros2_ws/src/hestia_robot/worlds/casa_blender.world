@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<!--
+  casa_blender.world — mundo do Gazebo com a casa EXPORTADA DO BLENDER
+  (ExpoProjectHouse.blend -> casa_blender/casa_blender.obj), nas coordenadas
+  nativas do Blender (Z-up, metros). Assim o frame do Gazebo = frame do Blender,
+  e o Godot (vindo do mesmo .blend) alinha sozinho.
+
+  A casa (paredes + moveis) entra como UM modelo estatico, com o mesh servindo
+  de colisao (o laser do robo bate nas paredes) e de visual.
+  Robo spawna dentro pela launch (nao aqui).
+-->
+<sdf version="1.6">
+  <world name="default">
+    <include><uri>model://ground_plane</uri></include>
+    <include><uri>model://sun</uri></include>
+
+    <scene>
+      <ambient>0.6 0.6 0.6 1</ambient>
+      <background>0.75 0.8 0.85 1</background>
+      <shadows>false</shadows>
+    </scene>
+
+    <!-- parametros de fisica iguais aos mundos do turtlebot3 (estaveis p/ nav) -->
+    <physics type="ode">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+      <real_time_update_rate>1000</real_time_update_rate>
+    </physics>
+
+    <model name="casa_blender">
+      <static>true</static>
+      <link name="link">
+        <collision name="col">
+          <geometry>
+            <mesh>
+              <uri>file:///mnt/c/Users/LeandroLaurindoSoare/Downloads/hestia/ros2_ws/src/hestia_robot/worlds/casa_blender/casa_blender.obj</uri>
+            </mesh>
+          </geometry>
+        </collision>
+        <visual name="vis">
+          <geometry>
+            <mesh>
+              <uri>file:///mnt/c/Users/LeandroLaurindoSoare/Downloads/hestia/ros2_ws/src/hestia_robot/worlds/casa_blender/casa_blender.obj</uri>
+            </mesh>
+          </geometry>
+        </visual>
+      </link>
+    </model>
+  </world>
+</sdf>
