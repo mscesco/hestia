@@ -1,28 +1,23 @@
 #!/usr/bin/env python3
 """
-localizacao_blender_simples.launch.py — PLANO B da demo: casa do Blender SEM
-AMCL. Em vez de localizar casando o laser com o mapa (AMCL, que ainda diverge em
-áreas abertas desta casa), usa uma TF ESTÁTICA `map -> odom` e confia na
-odometria (perfeita) do Gazebo. Localização de simulação "cravada" — o robô
-navega liso e o Godot mostra a pose certa, sem depender do AMCL convergir.
+localizacao_blender_simples.launch.py — PLANO B da demo: casa do Blender com a
+localização "cravada" da simulação, para GARANTIR a navegação lisa.
 
-Sobe:
-  1) gzserver (headless) com casa_blender.world (plugins init + factory);
-  2) robot_state_publisher do TB3 burger;
-  3) spawn do burger em (0, 6);
-  4) TF estática map->odom em (0, 6) (= pose de spawn; frame do Gazebo = frame
-     do mapa, então isto alinha o robô no mapa);
-  5) map_server servindo casa_blender.yaml (para o custo global do Nav2) +
-     lifecycle_manager que o ativa;
-  6) Nav2 SÓ navegação (planner/controller/bt/costmaps) — navigation_launch.py,
-     SEM amcl e SEM map_server próprio;
-  7) pose_tf_bridge: publica a pose real (TF map->base_footprint) em /amcl_pose,
-     para o no_ponte/Godot continuarem funcionando sem alteração;
-  8) RViz (opcional, arg `rviz`, ligado por padrão).
+Estratégia (reusa o mesmo bringup do plano A, só troca a localização):
+  - Sobe o Nav2 completo pelo `bringup_launch.py` (map_server + costmaps +
+    planner/controller/bt), igual ao plano A — então o MAPA chega certo ao
+    planejador (o que faltava na versão anterior do plano B);
+  - usa `nav2_params_simples.yaml`, onde o AMCL está com `tf_broadcast: false`:
+    ele roda mas NÃO controla a TF;
+  - um `static_transform_publisher` publica `map -> odom` na pose de spawn (0,6).
+    Como a odometria do Gazebo é exata, a posição do robô fica cravada e o Nav2
+    navega liso (sem as recuperações/abortos do AMCL em casa aberta);
+  - `pose_tf_bridge` lê a TF real (`map -> base_footprint`) e publica em
+    `/pose_robo`; o `no_ponte` é apontado p/ esse tópico (ver iniciar_*.sh), para
+    o Godot receber a pose EXATA (e não a estimativa do AMCL).
 
-Trade-off honesto: esta localização é "trapaça de simulação" (não casa scan com
-mapa como o AMCL). É o seguro para GARANTIR a demo; o fluxo com AMCL fica no
-localizacao_blender.launch.py.
+Honesto: é "trapaça de simulação" (não casa scan com mapa). É o seguro p/ a demo;
+o fluxo com AMCL de verdade fica no localizacao_blender.launch.py.
 """
 
 import os
@@ -57,7 +52,7 @@ def generate_launch_description():
             "map", default_value=os.path.join(_PKG, "maps", "casa_blender.yaml")),
         DeclareLaunchArgument(
             "params_file",
-            default_value=os.path.join(_PKG, "config", "nav2_params.yaml")),
+            default_value=os.path.join(_PKG, "config", "nav2_params_simples.yaml")),
         DeclareLaunchArgument("rviz", default_value="true"),
     ]
 
@@ -86,7 +81,9 @@ def generate_launch_description():
         )
     ])
 
-    # 4) TF estática map->odom na pose de spawn (0,6), sem rotação
+    # 4) TF estática map->odom na pose de spawn (0,6) — a localização "cravada".
+    #    (O AMCL está com tf_broadcast:false no nav2_params_simples.yaml, então
+    #    não há conflito de quem publica map->odom.)
     tf_map_odom = Node(
         package="tf2_ros", executable="static_transform_publisher", name="map_para_odom",
         arguments=["--x", "0.0", "--y", "6.0", "--z", "0.0",
@@ -96,44 +93,32 @@ def generate_launch_description():
         output="screen",
     )
 
-    # 5) map_server + lifecycle_manager que o ativa (para o custo global do Nav2)
-    mapa_stack = TimerAction(period=5.0, actions=[
-        Node(
-            package="nav2_map_server", executable="map_server", name="map_server",
-            output="screen",
-            parameters=[{"yaml_filename": mapa, "use_sim_time": use_sim_time,
-                         "topic_name": "map", "frame_id": "map"}],
-        ),
-        Node(
-            package="nav2_lifecycle_manager", executable="lifecycle_manager",
-            name="lifecycle_manager_localization", output="screen",
-            parameters=[{"use_sim_time": use_sim_time, "autostart": True,
-                         "node_names": ["map_server"]}],
-        ),
-    ])
-
-    # 6) Nav2 SÓ navegação (sem amcl, sem map_server próprio)
-    nav2 = TimerAction(period=7.0, actions=[
+    # 5) Nav2 COMPLETO pelo bringup (map_server + costmaps + planner/controller/bt
+    #    + amcl SEM tf). Mesmo caminho do plano A -> o mapa chega ao planejador.
+    nav2 = TimerAction(period=6.0, actions=[
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
-                PathJoinSubstitution([pkg_nav2, "launch", "navigation_launch.py"])),
+                PathJoinSubstitution([pkg_nav2, "launch", "bringup_launch.py"])),
             launch_arguments={
+                "map": mapa,
                 "use_sim_time": use_sim_time,
                 "params_file": params_file,
             }.items(),
         )
     ])
 
-    # 7) ponte de pose: TF map->base_footprint -> /amcl_pose (para no_ponte/Godot)
-    pose_bridge = TimerAction(period=8.0, actions=[
+    # 6) ponte de pose: TF map->base_footprint -> /pose_robo (pose EXATA p/ Godot)
+    pose_bridge = TimerAction(period=9.0, actions=[
         ExecuteProcess(
-            cmd=["python3", bridge, "--ros-args", "-p", "use_sim_time:=true"],
+            cmd=["python3", bridge, "--ros-args",
+                 "-p", "use_sim_time:=true",
+                 "-p", "pose_topic:=/pose_robo"],
             output="screen",
         )
     ])
 
-    # 8) RViz (opcional, ligado por padrão)
-    rviz = TimerAction(period=9.0, actions=[
+    # 7) RViz (opcional, ligado por padrão)
+    rviz = TimerAction(period=10.0, actions=[
         Node(
             package="rviz2", executable="rviz2", name="rviz2",
             arguments=["-d", PathJoinSubstitution(
@@ -145,4 +130,4 @@ def generate_launch_description():
     ])
 
     return LaunchDescription(
-        args + [gzserver, rsp, spawn, tf_map_odom, mapa_stack, nav2, pose_bridge, rviz])
+        args + [gzserver, rsp, spawn, tf_map_odom, nav2, pose_bridge, rviz])

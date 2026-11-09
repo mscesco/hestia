@@ -28,16 +28,20 @@ class PoseTfBridge(Node):
         super().__init__("pose_tf_bridge")
         self.declare_parameter("map_frame", "map")
         self.declare_parameter("base_frame", "base_footprint")
+        # tópico de saída: /pose_robo no plano B (evita conflito com o /amcl_pose
+        # que o AMCL ainda publica). Default /amcl_pose por compatibilidade.
+        self.declare_parameter("pose_topic", "/amcl_pose")
         self.map_frame = self.get_parameter("map_frame").value
         self.base_frame = self.get_parameter("base_frame").value
+        pose_topic = self.get_parameter("pose_topic").value
 
         self.tf_buffer = Buffer()
         TransformListener(self.tf_buffer, self)
-        self.pub = self.create_publisher(PoseWithCovarianceStamped, "/amcl_pose", 10)
+        self.pub = self.create_publisher(PoseWithCovarianceStamped, pose_topic, 10)
         self.create_timer(0.1, self._tick)   # 10 Hz
         self._avisou = False
         self.get_logger().info(
-            f"pose_tf_bridge pronto — {self.map_frame}->{self.base_frame} -> /amcl_pose")
+            f"pose_tf_bridge pronto — {self.map_frame}->{self.base_frame} -> {pose_topic}")
 
     def _tick(self):
         try:

@@ -44,18 +44,22 @@ class NoPonte(Node):
 
         self.declare_parameter("ponte_host", "localhost")
         self.declare_parameter("ponte_porta", 8000)
+        # tópico da pose: /amcl_pose (plano A) ou /pose_robo (plano B, via
+        # pose_tf_bridge — pose exata da TF). Configurável p/ não duplicar o nó.
+        self.declare_parameter("pose_topic", "/amcl_pose")
         host = self.get_parameter("ponte_host").value
         porta = self.get_parameter("ponte_porta").value
+        pose_topic = self.get_parameter("pose_topic").value
         self._url_pose = f"http://{host}:{porta}/pose"
         self._url_atividade = f"http://{host}:{porta}/atividade"
 
         self.create_subscription(
-            PoseWithCovarianceStamped, "/amcl_pose", self._on_pose, 10)
+            PoseWithCovarianceStamped, pose_topic, self._on_pose, 10)
         # atividade do robô (ronda / atendendo queda) -> ponte -> Godot
         self.create_subscription(String, "/atividade_robo", self._on_atividade, 10)
 
         self.get_logger().info(
-            f"no_ponte pronto — assinando /amcl_pose + /atividade_robo, "
+            f"no_ponte pronto — assinando {pose_topic} + /atividade_robo, "
             f"publicando em {self._url_pose}")
 
     def _on_pose(self, msg: PoseWithCovarianceStamped) -> None:

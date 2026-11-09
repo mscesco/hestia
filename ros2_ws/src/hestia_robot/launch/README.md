@@ -9,7 +9,7 @@ vira um inferno.
 | Arquivo | O que faz |
 |---------|-----------|
 | `localizacao_blender.launch.py` ⭐ | **PRINCIPAL.** Gazebo (`casa_blender.world`) + Nav2 + **AMCL** sobre `maps/casa_blender.yaml` + spawn em (0,6) + RViz (arg `rviz`, padrão on). |
-| `localizacao_blender_simples.launch.py` 🛟 | **PLANO B (garante a demo).** Igual, mas **SEM AMCL**: TF estática `map->odom` (0,6) + odometria do Gazebo + `pose_tf_bridge` (publica `/amcl_pose`) + map_server + Nav2 navegação + RViz. Use se o AMCL divergir. |
+| `localizacao_blender_simples.launch.py` 🛟 | **PLANO B (garante a demo).** Mesmo `bringup` do plano A (mapa chega ao planejador), mas com `nav2_params_simples.yaml` (**AMCL sem TF**, `tf_broadcast:false`) + **TF estática** `map->odom` (0,6) = localização exata da simulação + `pose_tf_bridge` publicando a pose real em `/pose_robo` (o `no_ponte` lê daí) + RViz. Use se o AMCL divergir. |
 
 **Casa do TurtleBot3 (legado / fallback) e mapeamento:**
 
