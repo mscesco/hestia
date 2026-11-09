@@ -38,3 +38,14 @@ acompanha).
 
 ## Fonte dos dados
 Servidor-ponte em `http://<host>:8000` — ver ../ponte/README.md
+
+## ⚠️ Não coloque o `.blend` aqui dentro
+O arquivo fonte do Blender fica em `../modelagem/ExpoProjectHouse.blend`, FORA
+deste projeto. Se um `.blend` entrar em `interface_godot/`, o Godot tenta importá-lo
+via Blender (que normalmente não está configurado) e o import inteiro falha —
+inclusive o `casa.glb`, deixando a cena sem a casa. O Godot usa só o `models/casa.glb`.
+
+## Primeira vez numa máquina nova
+A pasta `.godot/` (cache de importação) não é versionada. Antes de rodar a cena
+direto, importe os assets uma vez:
+`godot --headless --path . --import`  (ou abra no editor com `-e`, que importa sozinho).

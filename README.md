@@ -92,7 +92,8 @@ hestia/
 │       ├── maps/             # mapa salvo pelo SLAM (casa.pgm + casa.yaml)
 │       └── rviz/             # layouts do RViz2 para ver a navegação
 ├── ponte/                    # servidor FastAPI (ponte ROS <-> Godot, alvo do pentest)
-├── interface_godot/          # projeto Godot + assets do Blender
+├── interface_godot/          # projeto Godot (usa models/casa.glb exportada do Blender)
+├── modelagem/                # fonte Blender da casa (ExpoProjectHouse.blend) — FORA do projeto Godot
 └── pentest/                  # recon, exploit, relatório e correções
 ```
 
