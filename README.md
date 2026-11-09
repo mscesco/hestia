@@ -13,12 +13,11 @@ cuidador. Cada disciplina do semestre governa uma camada desse fluxo.
 
 ---
 
-## Começando (Semana 1)
+## Começando
 
 1. Monte o ambiente seguindo **`INSTALL_WSL2.md`** (guia do zero, para Windows/WSL2).
 2. Rode **`bash verifica_ambiente.sh`** para conferir a instalação.
-3. Siga o checklist em **`SEMANA_01.md`** até o portão de saída (o Gazebo abrir
-   o `turtlebot3_house`).
+3. Para rodar o sistema de ponta a ponta, siga o **`DEMO.md`**.
 4. Leia **`ARQUITETURA.md`** e **`CRONOGRAMA.md`**.
 
 ---
