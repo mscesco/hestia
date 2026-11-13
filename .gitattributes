@@ -1,0 +1,16 @@
+# Projeto roda no WSL/Linux (ROS 2, bash). Força fim de linha LF em todo texto,
+# para o Windows não gravar CRLF e quebrar os scripts no bash (erro $'\r').
+* text=auto eol=lf
+
+# Scripts e código que SÃO executados: LF obrigatório.
+*.sh        text eol=lf
+*.py        text eol=lf
+*.bash      text eol=lf
+*.launch.py text eol=lf
+
+# Binários: nunca normalizar.
+*.glb   binary
+*.blend binary
+*.pgm   binary
+*.png   binary
+*.jpg   binary
