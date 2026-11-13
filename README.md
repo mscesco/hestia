@@ -40,12 +40,18 @@ cuidador. Cada disciplina do semestre governa uma camada desse fluxo.
 - **Modelagem:** casa e robô modelados no Blender.
 - **Renderização:** Godot (shader autoral na linguagem de shaders do Godot e
   iluminação em tempo real, comprovando uso real do pipeline gráfico).
-- **Ponte de comunicação:** um servidor HTTP (FastAPI) atua como ponte entre o
-  ROS 2 e o Godot. Um nó ROS publica no servidor:
-  - **pose do robô** (posição e orientação em tempo real);
-  - **stream da câmera** do robô (visão "pelos olhos do robô").
-
-  O Godot consome esses dados do servidor e atualiza a cena 3D em tempo real.
+- **Ponte de comunicação:** um servidor HTTP (FastAPI) atua como ponte de mão
+  dupla entre o ROS 2 e o Godot:
+  - ROS → Godot: um nó (`no_ponte`) publica a **pose do robô** e sua
+    **atividade** em tempo real; o Godot lê de `GET /status`.
+  - Godot → ROS: o **painel do cuidador** no Godot envia pedidos
+    (`POST /pedido`, autenticado); o `no_ponte` drena esses pedidos e os publica
+    em `/chamados`, onde viram metas de navegação.
+  - **Visão "pelos olhos do robô":** câmera acoplada ao robô, em painel
+    picture-in-picture dentro do Godot (SubViewport).
+- **Interface intuitiva:** além da cena 3D, um **painel do cuidador** mostra o
+  status do robô em texto e traz botões para fazer pedidos sem terminal:
+  💧 água (cozinha), 🚨 emergência/queda (quarto), 🛋️ chamar à sala.
 
 ## 3. Segurança (Pentest)
 
@@ -60,19 +66,24 @@ cuidador. Cada disciplina do semestre governa uma camada desse fluxo.
      evidência (log + vídeo) capturada **antes** da correção;
   3. Classificação da severidade (vetor e nota CVSS).
 - **Correções técnicas aplicadas:**
-  1. Autenticação por token (JWT) no endpoint de comando;
-  2. Validação de schema do payload (Pydantic), rejeitando comandos malformados ou injetados.
+  1. Autenticação por token (JWT) nos endpoints de controle (`/comando`, `/pedido`);
+  2. Validação de schema do payload (Pydantic), rejeitando comandos malformados ou injetados;
+  3. **Endurecimento do `/token`:** emite credencial só com usuário+senha válidos
+     (antes, qualquer um pegava token — a correção do `/comando` era contornável),
+     e a chave do JWT (`HESTIA_SECRET_KEY`) sai do código para variável de ambiente.
 
 ## 4. Paradigmas e Arquitetura
 
 Ver `ARQUITETURA.md` para a justificativa completa.
 
-- **Paradigma 1 — Orientado a Objetos (OOP):** modela os componentes do robô
-  (robô, sensores, atuadores) — entidades com identidade e estado mutável.
-- **Paradigma 2 — Funcional:** pipeline de processamento das leituras de
-  sensor, como uma cadeia de funções puras, sem estado compartilhado.
-- **Padrão de projeto — Observer:** adotado na comunicação por eventos. O modelo
-  publish/subscribe de tópicos do ROS 2 é uma aplicação direta do Observer.
+- **Paradigma 1 — Orientado a Objetos (OOP):** entidade `Robo` com identidade e
+  estado mutável, **usada pelo** `gerenciador_chamados` (não é classe ilustrativa).
+- **Paradigma 2 — Funcional:** pipeline de leituras de sensor como cadeia de
+  funções puras (`pipeline_sensores.py`), **executado** pelo nó `no_percepcao`
+  sobre o `/scan` → `/obstaculo_proximo`.
+- **Padrão de projeto — Observer:** implementação autoral (`observador.py`,
+  `Sujeito`/`Observador`) usada na notificação de atividade; reforçada pelo
+  publish/subscribe de tópicos do ROS 2, que aplica o mesmo princípio.
 
 ---
 

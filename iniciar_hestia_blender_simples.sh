@@ -39,9 +39,10 @@ for i in $(seq 1 60); do
 done
 echo "[hestia] prontidao: clock=$clock nav=$nav pose=$pose"
 
-echo "[hestia] 4/4 subindo no_ponte + gerenciador_chamados (ronda inicia sozinha)..."
+echo "[hestia] 4/4 subindo no_ponte + gerenciador_chamados + no_percepcao (ronda inicia sozinha)..."
 setsid nohup ros2 run hestia_robot no_ponte --ros-args -p use_sim_time:=true -p pose_topic:=/pose_robo >"$LOGDIR/no_ponte.log" 2>&1 < /dev/null &
 setsid nohup ros2 run hestia_robot gerenciador_chamados --ros-args -p use_sim_time:=true >"$LOGDIR/gerenciador.log" 2>&1 < /dev/null &
+setsid nohup ros2 run hestia_robot no_percepcao --ros-args -p use_sim_time:=true >"$LOGDIR/no_percepcao.log" 2>&1 < /dev/null &
 sleep 5
 
 echo "[hestia] status da ponte:"

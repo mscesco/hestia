@@ -44,7 +44,8 @@ from rclpy.action import ActionClient
 from rclpy.node import Node
 from std_msgs.msg import String
 
-from hestia_robot.modelos import Chamado, Prioridade
+from hestia_robot.modelos import Chamado, EstadoRobo, Prioridade, Robo
+from hestia_robot.observador import LogAtividade, PublicadorAtividade, Sujeito
 
 # Waypoints da ronda de cuidado (pontos alcançáveis verificados no mapa).
 # Poderiam vir de config/waypoints.yaml; inline por simplicidade.
@@ -77,6 +78,18 @@ class GerenciadorChamados(Node):
         # ao Godot, que usa isso para acender o realce de emergência.
         self._pub_atividade = self.create_publisher(String, "/atividade_robo", 10)
         self._ultima_atividade = None
+
+        # OBSERVER (padrão de projeto autoral, ver observador.py): este nó é o
+        # Sujeito. Ao mudar de atividade, notifica os observadores inscritos —
+        # sem saber quem são nem o que fazem.
+        self._sujeito_atividade = Sujeito()
+        self._sujeito_atividade.inscrever(LogAtividade(self.get_logger()))
+        self._sujeito_atividade.inscrever(
+            PublicadorAtividade(self._pub_atividade, String))
+
+        # OOP (modelos.py): a entidade central com identidade e estado mutável.
+        # O controle usa de fato esta instância para refletir o estado do robô.
+        self._robo = Robo("Hestia")
 
         # timer que injeta a ronda quando o robô está ocioso
         self.create_timer(1.0, self._talvez_rondar)
@@ -149,7 +162,15 @@ class GerenciadorChamados(Node):
         goal.pose.pose.position.x = float(ch.destino[0])
         goal.pose.pose.position.y = float(ch.destino[1])
         goal.pose.pose.orientation.w = 1.0
-        self.get_logger().info(f"-> Nav2: {ch.tipo} rumo a {ch.destino}")
+        # OOP: atualiza o estado da entidade Robo conforme o que vai atender.
+        if ch.prioridade == Prioridade.PATRULHA:
+            self._robo.estado = EstadoRobo.PATRULHANDO
+            self._robo.chamado_atual = None
+        else:
+            self._robo.iniciar_atendimento(ch)
+        self.get_logger().info(
+            f"-> Nav2: {ch.tipo} rumo a {ch.destino} "
+            f"(robô: {self._robo.estado.value})")
         self._publicar_atividade(ch)
         self._nav.send_goal_async(goal).add_done_callback(self._meta_aceita)
 
@@ -164,7 +185,8 @@ class GerenciadorChamados(Node):
             texto = f"atendendo {ch.tipo}"
         if texto != self._ultima_atividade:
             self._ultima_atividade = texto
-            self._pub_atividade.publish(String(data=texto))
+            # OBSERVER: notifica os inscritos (log + publicação em /atividade_robo)
+            self._sujeito_atividade.notificar(texto)
 
     def _meta_aceita(self, fut) -> None:
         gh = fut.result()
@@ -182,6 +204,9 @@ class GerenciadorChamados(Node):
         antigo = self._ativo
         self._ativo = None
         self._goal_handle = None
+        # OOP: a entidade Robo deixa de atender (volta a patrulhar/ocioso)
+        if antigo is not None and antigo.prioridade != Prioridade.PATRULHA:
+            self._robo.concluir_atendimento()
 
         if self._preemptar:
             self._preemptar = False

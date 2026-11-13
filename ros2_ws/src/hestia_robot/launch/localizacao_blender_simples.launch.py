@@ -21,6 +21,7 @@ o fluxo com AMCL de verdade fica no localizacao_blender.launch.py.
 """
 
 import os
+import tempfile
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
@@ -35,6 +36,23 @@ from launch_ros.substitutions import FindPackageShare
 _PKG = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
+def _gerar_world():
+    """Gera um .world temporario com o caminho ABSOLUTO real do mesh desta
+    maquina (substitui o token __OBJ_PATH__). Resolve o bug do caminho fixo:
+    sem isto, em qualquer maquina diferente da do autor do .world o mesh nao
+    carrega e a casa sobe VAZIA (sem paredes -> laser/AMCL/Nav2 quebram)."""
+    template = os.path.join(_PKG, "worlds", "casa_blender.world")
+    obj = os.path.join(_PKG, "worlds", "casa_blender", "casa_blender.obj")
+    if not os.path.isfile(obj):
+        raise FileNotFoundError(f"mesh da casa nao encontrado: {obj}")
+    with open(template, "r", encoding="utf-8") as f:
+        conteudo = f.read().replace("__OBJ_PATH__", obj)
+    saida = os.path.join(tempfile.gettempdir(), "hestia_casa_blender.world")
+    with open(saida, "w", encoding="utf-8") as f:
+        f.write(conteudo)
+    return saida
+
+
 def generate_launch_description():
     use_sim_time = LaunchConfiguration("use_sim_time")
     mapa = LaunchConfiguration("map")
@@ -43,7 +61,7 @@ def generate_launch_description():
     pkg_tb3_gazebo = get_package_share_directory("turtlebot3_gazebo")
     pkg_nav2 = FindPackageShare("nav2_bringup")
 
-    world = os.path.join(_PKG, "worlds", "casa_blender.world")
+    world = _gerar_world()
     bridge = os.path.join(_PKG, "scripts", "pose_tf_bridge.py")
 
     args = [

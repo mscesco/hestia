@@ -9,6 +9,7 @@ pkill -9 -f gzclient 2>/dev/null
 pkill -9 -f rviz2 2>/dev/null
 pkill -9 -f no_ponte 2>/dev/null
 pkill -9 -f gerenciador_chamados 2>/dev/null
+pkill -9 -f no_percepcao 2>/dev/null
 pkill -9 -f pose_tf_bridge 2>/dev/null
 pkill -9 -f explorador_nav2 2>/dev/null
 pkill -9 -f nav2 2>/dev/null

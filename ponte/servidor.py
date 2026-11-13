@@ -22,7 +22,10 @@ import base64
 import hashlib
 import hmac
 import json
+import os
 import time
+
+from collections import deque
 
 from fastapi import Depends, FastAPI, Header, HTTPException
 from pydantic import BaseModel
@@ -35,8 +38,18 @@ _estado = {"pose": {"x": 0.0, "y": 0.0, "theta": 0.0}, "atividade": "ocioso"}
 # --------------------------------------------------------------------
 # Autenticação por token (JWT HS256, implementado sem lib externa)
 # --------------------------------------------------------------------
-SECRET_KEY = "troque-esta-chave-antes-da-entrega"  # TODO: mover para variável de ambiente
+# Chave do JWT: lida da variável de ambiente HESTIA_SECRET_KEY. O fallback
+# existe só para não travar a demo caso a variável não esteja setada — NÃO é
+# prática de produção (em produção a ausência da variável deveria ser erro).
+SECRET_KEY = os.environ.get("HESTIA_SECRET_KEY", "demo-inseguro-troque-em-producao")
 ALGORITMO = "HS256"
+
+# Credenciais do operador para emitir token (/token). Antes, /token emitia
+# credencial para QUALQUER UM sem autenticação — logo a correção do /comando era
+# contornável (o atacante só pedia um token primeiro). Agora /token exige
+# usuário+senha. Valores via ambiente; defaults só para a demo.
+OPERADOR_USUARIO = os.environ.get("HESTIA_USUARIO", "operador")
+OPERADOR_SENHA = os.environ.get("HESTIA_SENHA", "hestia2026")
 
 
 def _b64url(dados: bytes) -> str:
@@ -86,11 +99,21 @@ def verificar_token(authorization: str = Header(None)) -> dict:
     return payload
 
 
+class Credencial(BaseModel):
+    usuario: str
+    senha: str
+
+
 @app.post("/token")
-def emitir_token():
-    """Emite um token de demonstração. Login real está fora do escopo do
-    projeto — aqui o objetivo é provar que /comando exige credencial válida."""
-    return {"access_token": criar_token(sub="operador"), "token_type": "bearer"}
+def emitir_token(cred: Credencial):
+    """Emite um token APENAS para quem apresenta usuário+senha válidos.
+    Fecha a brecha de a correção do /comando ser contornável (pedir token sem
+    autenticação). Usa comparação em tempo constante contra timing attack."""
+    usuario_ok = hmac.compare_digest(cred.usuario, OPERADOR_USUARIO)
+    senha_ok = hmac.compare_digest(cred.senha, OPERADOR_SENHA)
+    if not (usuario_ok and senha_ok):
+        raise HTTPException(status_code=401, detail="credenciais inválidas")
+    return {"access_token": criar_token(sub=cred.usuario), "token_type": "bearer"}
 
 
 class Comando(BaseModel):
@@ -132,6 +155,38 @@ def post_atividade(texto: str):
 def post_comando(cmd: Comando, _payload: dict = Depends(verificar_token)):
     _estado["atividade"] = f"executando {cmd.tipo}"
     return {"ok": True, "recebido": cmd.model_dump()}
+
+
+# --------------------------------------------------------------------
+# Pedidos vindos da INTERFACE (Godot): o operador clica "água"/"queda" e a UI
+# faz POST /pedido aqui. Um nó ROS (no_ponte) drena GET /pedidos e republica no
+# tópico /chamados, onde o gerenciador_chamados aplica prioridade/preempção.
+# /pedido exige JWT (mesma credencial do /comando) — a UI autentica em /token.
+# --------------------------------------------------------------------
+_pedidos: deque = deque(maxlen=50)
+
+
+class Pedido(BaseModel):
+    tipo: str                 # "agua", "queda", ...
+    prioridade: str           # "PEDIDO_COMUM" | "EMERGENCIA" | "PATRULHA"
+    x: float
+    y: float
+
+
+@app.post("/pedido")
+def post_pedido(pedido: Pedido, _payload: dict = Depends(verificar_token)):
+    """A interface enfileira um chamado (autenticada). Não publica no ROS
+    diretamente (a ponte não fala ROS): só guarda; o no_ponte drena e publica."""
+    _pedidos.append(pedido.model_dump())
+    return {"ok": True, "na_fila": len(_pedidos)}
+
+
+@app.get("/pedidos")
+def get_pedidos():
+    """Drenado pelo no_ponte (ROS): retorna e ESVAZIA a fila de pedidos."""
+    itens = list(_pedidos)
+    _pedidos.clear()
+    return {"pedidos": itens}
 
 
 # Câmera "pelos olhos do robô": resolvida NO GODOT como painel picture-in-picture

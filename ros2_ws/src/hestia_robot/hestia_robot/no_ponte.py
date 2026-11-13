@@ -1,9 +1,15 @@
 """
-no_ponte.py — assina a pose do robô (AMCL) e publica na ponte FastAPI (HTTP).
+no_ponte.py — ponte de mão dupla entre ROS 2 e a ponte FastAPI (HTTP).
 
-Assina `/amcl_pose` (geometry_msgs/PoseWithCovarianceStamped, publicado pelo
-AMCL) e faz `POST /pose` no servidor-ponte a cada atualização, convertendo o
-quatérnio de orientação para o ângulo `theta` (yaw) que o Godot consome.
+Saída (ROS -> HTTP): assina `/amcl_pose` (geometry_msgs/PoseWithCovarianceStamped,
+publicado pelo AMCL) e faz `POST /pose` no servidor a cada atualização,
+convertendo o quatérnio de orientação para o ângulo `theta` (yaw) que o Godot
+consome. Também repassa a atividade (`/atividade_robo` -> `POST /atividade`).
+
+Entrada (HTTP -> ROS): a cada 0,5 s drena `GET /pedidos` (pedidos feitos pela
+interface Godot, autenticada) e republica cada um em `/chamados`
+(std_msgs/String com JSON) — onde o gerenciador_chamados aplica a prioridade e a
+preempção. É assim que um clique na UI vira uma meta de navegação.
 
 Parâmetros ROS (podem ser passados por --ros-args -p):
   ponte_host (default: "localhost")
@@ -20,6 +26,7 @@ não envia imagem. Um /stream HTTP (MJPEG da câmera real do Gazebo) fica como
 evolução futura, fora do escopo atual.
 """
 
+import json
 import math
 
 import requests
@@ -52,15 +59,20 @@ class NoPonte(Node):
         pose_topic = self.get_parameter("pose_topic").value
         self._url_pose = f"http://{host}:{porta}/pose"
         self._url_atividade = f"http://{host}:{porta}/atividade"
+        self._url_pedidos = f"http://{host}:{porta}/pedidos"
 
         self.create_subscription(
             PoseWithCovarianceStamped, pose_topic, self._on_pose, 10)
         # atividade do robô (ronda / atendendo queda) -> ponte -> Godot
         self.create_subscription(String, "/atividade_robo", self._on_atividade, 10)
 
+        # ENTRADA: pedidos da interface (HTTP) -> tópico /chamados (ROS)
+        self._pub_chamados = self.create_publisher(String, "/chamados", 10)
+        self.create_timer(0.5, self._drenar_pedidos)
+
         self.get_logger().info(
             f"no_ponte pronto — assinando {pose_topic} + /atividade_robo, "
-            f"publicando em {self._url_pose}")
+            f"publicando em {self._url_pose} e drenando pedidos de {self._url_pedidos}")
 
     def _on_pose(self, msg: PoseWithCovarianceStamped) -> None:
         p = msg.pose.pose.position
@@ -81,6 +93,19 @@ class NoPonte(Node):
                 self._url_atividade, params={"texto": msg.data}, timeout=1.0)
         except requests.exceptions.RequestException:
             pass  # telemetria best-effort; não derruba o nó
+
+    def _drenar_pedidos(self) -> None:
+        """Puxa os pedidos enfileirados pela interface e publica em /chamados."""
+        try:
+            r = requests.get(self._url_pedidos, timeout=1.0)
+        except requests.exceptions.RequestException:
+            return  # ponte pode não estar no ar ainda; tenta de novo no próximo tick
+        if r.status_code != 200:
+            return
+        for p in r.json().get("pedidos", []):
+            msg = String(data=json.dumps(p))
+            self._pub_chamados.publish(msg)
+            self.get_logger().info(f"pedido da interface -> /chamados: {p}")
 
 
 def main():

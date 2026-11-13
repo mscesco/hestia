@@ -41,9 +41,14 @@ Acompanhe num terminal: `tail -f /tmp/hestia_logs/gerenciador.log`
 → deve aparecer `PREEMPCAO: queda[EMERGENCIA] interrompe agua[PEDIDO_COMUM] ...`
 e o caminho no RViz **muda de destino na hora**. **Grave um vídeo disto.**
 
-## 4. (Opcional) Godot — a vista 3D "bonita"
+## 4. Godot — a vista 3D + painel do cuidador
 No Windows (com a ponte no ar): `godot --path interface_godot`.
 O robô (cápsula azul) se move junto com a navegação e **pulsa vermelho** na emergência.
+- Canto superior direito: **"pelos olhos do robô"** (câmera acoplada).
+- Canto inferior esquerdo: **painel do cuidador** — status em texto e botões que
+  fazem o pedido sem terminal: **💧 água**, **🚨 queda (emergência)**, **🛋️ sala**.
+  Clicar em 🚨 com um pedido comum a caminho mostra a **preempção** na cena.
+  (A UI autentica sozinha na ponte; credencial da demo: `operador` / `hestia2026`.)
 
 ## 5. Parar tudo
 ```bash

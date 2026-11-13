@@ -1,7 +1,9 @@
 """
 Paradigma OOP — componentes do robô como entidades com identidade e estado.
 
-ESQUELETO / PONTO DE PARTIDA. Preencher e adaptar. NÃO é código testado.
+USADO DE VERDADE: `Chamado`, `Prioridade`, `EstadoRobo` e `Robo` são usados pelo
+nó de controle `gerenciador_chamados`, que mantém uma instância de `Robo` e
+atualiza seu estado (patrulhando / atendendo / ocioso) ao longo da operação.
 Ver ARQUITETURA.md, seção "Paradigma 1 — Orientação a Objetos".
 """
 

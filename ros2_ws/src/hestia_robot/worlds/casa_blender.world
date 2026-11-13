@@ -8,6 +8,14 @@
   A casa (paredes + moveis) entra como UM modelo estatico, com o mesh servindo
   de colisao (o laser do robo bate nas paredes) e de visual.
   Robo spawna dentro pela launch (nao aqui).
+
+  ATENCAO — PORTABILIDADE: o caminho do mesh NAO e fixo aqui. O token
+  __OBJ_PATH__ e substituido em tempo de launch pelo caminho absoluto real
+  desta maquina (localizacao_blender*.launch.py gera um .world temporario com o
+  caminho correto). Antes, havia um caminho absoluto cravado na pasta de UM
+  integrante -> nas outras maquinas o mesh nao carregava e a casa subia VAZIA
+  (sem paredes), o que quebrava o laser/AMCL/Nav2. Nunca mais escrever caminho
+  absoluto aqui.
 -->
 <sdf version="1.6">
   <world name="default">
@@ -33,14 +41,14 @@
         <collision name="col">
           <geometry>
             <mesh>
-              <uri>file:///mnt/c/Users/LeandroLaurindoSoare/Downloads/hestia/ros2_ws/src/hestia_robot/worlds/casa_blender/casa_blender.obj</uri>
+              <uri>file://__OBJ_PATH__</uri>
             </mesh>
           </geometry>
         </collision>
         <visual name="vis">
           <geometry>
             <mesh>
-              <uri>file:///mnt/c/Users/LeandroLaurindoSoare/Downloads/hestia/ros2_ws/src/hestia_robot/worlds/casa_blender/casa_blender.obj</uri>
+              <uri>file://__OBJ_PATH__</uri>
             </mesh>
           </geometry>
         </visual>

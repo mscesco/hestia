@@ -43,9 +43,10 @@ echo "[hestia] 4/5 publicando pose inicial do AMCL em (0,6)..."
 timeout 8 ros2 topic pub -r 3 /initialpose geometry_msgs/msg/PoseWithCovarianceStamped "{header: {frame_id: map}, pose: {pose: {position: {x: 0.0, y: 6.0, z: 0.0}, orientation: {z: 0.0, w: 1.0}}, covariance: [0.25,0,0,0,0,0, 0,0.25,0,0,0,0, 0,0,0,0,0,0, 0,0,0,0,0,0, 0,0,0,0,0,0, 0,0,0,0,0,0.0685]}}" >/dev/null 2>&1
 sleep 3
 
-echo "[hestia] 5/5 subindo no_ponte + gerenciador_chamados (ronda inicia sozinha)..."
+echo "[hestia] 5/5 subindo no_ponte + gerenciador_chamados + no_percepcao (ronda inicia sozinha)..."
 setsid nohup ros2 run hestia_robot no_ponte --ros-args -p use_sim_time:=true >"$LOGDIR/no_ponte.log" 2>&1 < /dev/null &
 setsid nohup ros2 run hestia_robot gerenciador_chamados --ros-args -p use_sim_time:=true >"$LOGDIR/gerenciador.log" 2>&1 < /dev/null &
+setsid nohup ros2 run hestia_robot no_percepcao --ros-args -p use_sim_time:=true >"$LOGDIR/no_percepcao.log" 2>&1 < /dev/null &
 sleep 5
 
 echo "[hestia] status da ponte:"

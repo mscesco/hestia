@@ -30,6 +30,7 @@ setup(
         "console_scripts": [
             "gerenciador_chamados = hestia_robot.gerenciador_chamados:main",
             "no_ponte = hestia_robot.no_ponte:main",
+            "no_percepcao = hestia_robot.no_percepcao:main",
         ],
     },
 )

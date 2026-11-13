@@ -34,10 +34,16 @@ estado interno que evolui, encapsulando esse estado atrás de métodos.
 
 Exemplos de classes: `Robo`, `Sensor`, `Chamado`.
 
+> **Onde roda (prova):** o `gerenciador_chamados` mantém uma instância de `Robo`
+> e atualiza seu estado (`iniciar_atendimento`, `concluir_atendimento`,
+> `EstadoRobo.PATRULHANDO`) a cada meta despachada/concluída. Não é classe
+> ilustrativa: é usada no nó de controle.
+
 ## Paradigma 2 — Funcional
 
 **Onde:** pipeline de processamento de leituras de sensor
-(`hestia_robot/pipeline_sensores.py`).
+(`hestia_robot/pipeline_sensores.py`), **executado** pelo nó
+`hestia_robot/no_percepcao.py`.
 
 **Por quê (justificativa técnica):** o tratamento de uma leitura de sensor é uma
 **transformação de dados** — a leitura bruta entra, passa por uma sequência de
@@ -47,22 +53,32 @@ compartilhado) torna cada etapa testável isoladamente e elimina bugs de estado
 mutável compartilhado. É o oposto do caso do robô: aqui não há identidade a
 preservar, só dados fluindo.
 
+> **Onde roda (prova):** `no_percepcao` assina o `/scan` do LiDAR, passa cada
+> varredura por `processar()` (a composição `filtrar_ruido -> normalizar ->
+> detectar_obstaculo_proximo`) e publica o resultado em `/obstaculo_proximo`.
+> Dá para demonstrar ao vivo: `ros2 topic echo /obstaculo_proximo` muda para
+> `True` quando algo se aproxima do robô.
+
 ---
 
 ## Padrão de Projeto — Observer
 
-**Onde:** comunicação por eventos entre os chamados e o gerenciador
-(`hestia_robot/gerenciador_chamados.py`), sobre o modelo de tópicos do ROS 2.
+**Onde:** duas camadas, uma reforçando a outra.
+
+1. **Implementação autoral explícita** (`hestia_robot/observador.py`): classes
+   `Sujeito` e `Observador` (GoF). O `gerenciador_chamados` é um `Sujeito`:
+   quando a atividade do robô muda, chama `notificar(...)` e os observadores
+   inscritos reagem — `LogAtividade` (registra no log) e `PublicadorAtividade`
+   (publica em `/atividade_robo`). Adicionar uma reação (LED, métrica) = criar
+   outro `Observador` e inscrevê-lo, **sem tocar no sujeito**.
+2. **Aplicação na infraestrutura**: o modelo **publish/subscribe** de tópicos do
+   ROS 2 é, ele próprio, uma aplicação do Observer — o `gerenciador` se inscreve
+   em `/chamados` e é notificado sem o publicador saber quem ouve.
 
 **Por quê (justificativa técnica):** o Observer desacopla quem **produz** um
-evento de quem **reage** a ele. O produtor não conhece os consumidores; os
-consumidores se inscrevem e são notificados. O modelo **publish/subscribe** de
-tópicos do ROS 2 é uma aplicação direta do Observer: o gerenciador de chamados
-se inscreve no tópico de chamados e é notificado quando um novo chamado é
-publicado, sem que o publicador saiba quem está ouvindo.
-
-Isso significa que o padrão **emerge da arquitetura** — não foi adicionado
-artificialmente para cumprir o requisito.
+evento de quem **reage** a ele. Ter a implementação autoral (camada 1) responde
+à cobrança clássica "isso é só o ROS, não vocês aplicando o padrão": o padrão
+está escrito no código do grupo, e o ROS confirma o mesmo princípio em escala.
 
 ---
 
