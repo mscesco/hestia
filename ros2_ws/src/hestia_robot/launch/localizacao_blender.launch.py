@@ -29,7 +29,10 @@ from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
-_PKG = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# realpath resolve o symlink do colcon --symlink-install de volta para a pasta
+# FONTE (src/hestia_robot), onde worlds/ existe. Com abspath, __file__ ficava no
+# install/ (onde worlds/ não é instalado) e o mesh não era encontrado.
+_PKG = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
 
 def _gerar_world():

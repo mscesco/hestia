@@ -28,15 +28,17 @@ echo "[hestia] 2/5 subindo Gazebo(casa_blender) + AMCL + Nav2..."
 setsid nohup ros2 launch hestia_robot localizacao_blender.launch.py >"$LOGDIR/localizacao.log" 2>&1 < /dev/null &
 
 echo "[hestia] 3/5 aguardando AMCL + Nav2 ficarem prontos..."
-clock=0; amcl=0; nav=0
-for i in $(seq 1 90); do
-  timeout 3 ros2 topic echo /clock --once >/dev/null 2>&1 && clock=1
+# Checagem por lista de nós/ações (confiável no WSL). NÃO usar `ros2 topic echo
+# /clock --once`: no WSL ele costuma pendurar e nunca marcar pronto, travando o
+# script mesmo com tudo no ar.
+amcl=0; nav=0
+for i in $(seq 1 40); do
   ros2 node list 2>/dev/null | grep -q '/amcl' && amcl=1
   ros2 action list 2>/dev/null | grep -q navigate_to_pose && nav=1
-  [ "$clock" -eq 1 ] && [ "$amcl" -eq 1 ] && [ "$nav" -eq 1 ] && break
+  [ "$amcl" -eq 1 ] && [ "$nav" -eq 1 ] && break
   sleep 3
 done
-echo "[hestia] prontidao: clock=$clock amcl=$amcl nav=$nav"
+echo "[hestia] prontidao: amcl=$amcl nav=$nav"
 
 echo "[hestia] 4/5 publicando pose inicial do AMCL em (0,6)..."
 # publica algumas vezes p/ garantir que o AMCL recebe (robo spawna em 0,6)
@@ -51,4 +53,4 @@ sleep 5
 
 echo "[hestia] status da ponte:"
 curl -s -m 3 http://localhost:8000/status; echo
-echo "HESTIA_UP clock=$clock amcl=$amcl nav=$nav"
+echo "HESTIA_UP amcl=$amcl nav=$nav"

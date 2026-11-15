@@ -16,6 +16,12 @@ setup(
         ("share/" + package_name + "/config", glob("config/*.yaml")),
         ("share/" + package_name + "/maps", glob("maps/*.pgm") + glob("maps/*.yaml")),
         ("share/" + package_name + "/rviz", glob("rviz/*.rviz")),
+        # worlds/ precisa ser instalada: o launch gera o .world a partir deste
+        # template e do mesh da casa. Sem isto, rodando via `ros2 launch` o mesh
+        # não é encontrado (a casa sobe vazia / o launch falha).
+        ("share/" + package_name + "/worlds", glob("worlds/*.world")),
+        ("share/" + package_name + "/worlds/casa_blender",
+         glob("worlds/casa_blender/*")),
         # scripts/ precisa ser instalado: o launch do plano B roda o
         # pose_tf_bridge.py pelo caminho instalado (share/.../scripts/).
         ("share/" + package_name + "/scripts",
