@@ -116,12 +116,9 @@ hestia/
 
 | Integrante                     | RA     | Responsabilidade principal |
 |---------------------------------|--------|----------------------------|
-| Camila Cesco Ferreira            | 134666 | (definir)                  |
-| Leandro Laurindo Soares          | 82263  | (definir)                  |
-| Marcelo Luna Ieradi              | 95121  | (definir)                  |
-
-> A responsabilidade principal indica quem liderou cada camada — **não** exime
-> ninguém de saber explicar as demais. A avaliação é individual.
+| Camila Cesco Ferreira            | 134666 | Programação da Robótica        |
+| Leandro Laurindo Soares          | 82263  | Modelagem e Ponte Godot/Gazebo |
+| Marcelo Luna Ieradi              | 95121  | Modelagem                      |
 
 ## Stack
 
