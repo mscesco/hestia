@@ -37,9 +37,14 @@ cuidador. Cada disciplina do semestre governa uma camada desse fluxo.
 
 ## 2. Computação Gráfica (Interface Imersiva)
 
-- **Modelagem:** casa e robô modelados no Blender.
+- **Modelagem:** casa e robô (`miniRobot.glb`) modelados no Blender; a casa usa
+  texturas PBR 2K (Poliigon). O robô tem **andar procedural** (balanço/saltito
+  enquanto se desloca; parado, fica quieto) — animação por código, sem rig.
 - **Renderização:** Godot (shader autoral na linguagem de shaders do Godot e
   iluminação em tempo real, comprovando uso real do pipeline gráfico).
+- **Câmeras:** botão **🎥 Câmera** (ou tecla **C**) alterna entre **visão geral**
+  (casa inteira), **3ª pessoa** (câmera que segue o robô) e **1ª pessoa** (tela
+  cheia pelos olhos dele).
 - **Ponte de comunicação:** um servidor HTTP (FastAPI) atua como ponte de mão
   dupla entre o ROS 2 e o Godot:
   - ROS → Godot: um nó (`no_ponte`) publica a **pose do robô** e sua

@@ -36,6 +36,22 @@ cinza, confira que `OlhoCam` está com `current = true` e que a `CamRobo` está
 enquadrando a cena (se a direção parecer invertida, gire a `CamRobo` — o painel
 acompanha).
 
+## Robô, câmeras e painel do cuidador
+
+- **Robô (`models/miniRobot.glb`):** carregado automaticamente por `Robo.gd`, que
+  substitui a cápsula placeholder. Ajustes no nó **Robo** (grupo "Modelo externo"):
+  `Modelo Escala` (padrão 0.28 ≈ 1,3 m), `Modelo Rotação Graus → Y` (90°, alinha a
+  frente à direção de movimento) e `Modelo Offset` (pés no chão). Tem **andar
+  procedural** (saltito + balanço ao se mover) — ver `_animar_andar` em `Robo.gd`;
+  animação de verdade (articulada) exigiria rig no Blender.
+- **Câmeras:** botão **🎥 Câmera** no painel (ou tecla **C**) alterna:
+  1. **Visão geral** — câmera fixa enquadrando a casa;
+  2. **3ª pessoa** — câmera que segue o robô por trás/cima;
+  3. **1ª pessoa** — tela cheia pelos olhos dele.
+- **Painel do cuidador:** card com status (colorido por estado) e botões de pedido
+  (💧 água, 🚨 queda, 🛋 sala) que autenticam na ponte e enviam `POST /pedido`;
+  banner de emergência no topo quando há queda. Estilo aplicado por código em `Main.gd`.
+
 ## Fonte dos dados
 Servidor-ponte em `http://<host>:8000` — ver ../ponte/README.md
 

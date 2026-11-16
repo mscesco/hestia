@@ -32,6 +32,13 @@ var _luz_emergencia: OmniLight3D
 var _em_emergencia: bool = false
 var _t: float = 0.0
 
+# "andar procedural" (sem rig): balanço + saltito enquanto o robô se move
+var _modelo: Node3D
+var _prev_pos: Vector3 = Vector3.ZERO
+var _parado_ha: float = 999.0
+var _fase: float = 0.0
+var _amp: float = 0.0            # intensidade do balanço (sobe ao andar)
+
 func _ready() -> void:
 	_carregar_modelo_externo()
 
@@ -66,6 +73,7 @@ func _carregar_modelo_externo() -> void:
 		deg_to_rad(modelo_rotacao_graus.z))
 	inst.position = modelo_offset
 	add_child(inst)
+	_modelo = inst
 	# esconde a cápsula/placeholder
 	for nome in ["Corpo", "Frente"]:
 		var c = get_node_or_null(nome)
@@ -90,3 +98,27 @@ func _process(delta: float) -> void:
 		_t += delta
 		# pulso suave entre ~1 e ~5 de energia
 		_luz_emergencia.light_energy = 3.0 + 2.0 * sin(_t * 9.0)
+	_animar_andar(delta)
+
+func _animar_andar(delta: float) -> void:
+	# "andar procedural" sobre o modelo inteiro (não é rig): saltito + balanço
+	# quando o robô está se deslocando; quieto quando parado.
+	if _modelo == null:
+		return
+	# detecta movimento de forma robusta (a pose chega em passos, ~5 Hz):
+	# considera "andando" se a posição mudou nos últimos 0,4 s.
+	if global_position.distance_to(_prev_pos) > 0.002:
+		_parado_ha = 0.0
+	else:
+		_parado_ha += delta
+	_prev_pos = global_position
+	var andando := _parado_ha < 0.4
+
+	_amp = lerp(_amp, 1.0 if andando else 0.0, 0.1)   # intensidade sobe/desce suave
+	_fase += delta * 9.0
+
+	var salto := absf(sin(_fase)) * 0.06 * _amp        # sobe até ~6 cm por "passo"
+	var balanco := sin(_fase) * 0.10 * _amp            # rola p/ os lados (~6°)
+	var inclina := sin(_fase * 2.0) * 0.04 * _amp      # leve "cabeceio"
+	_modelo.position = modelo_offset + Vector3(0.0, salto, 0.0)
+	_modelo.rotation = Vector3(inclina, deg_to_rad(modelo_rotacao_graus.y), balanco)
