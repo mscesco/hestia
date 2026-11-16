@@ -9,7 +9,8 @@ Estratégia (reusa o mesmo bringup do plano A, só troca a localização):
     planejador (o que faltava na versão anterior do plano B);
   - usa `nav2_params_simples.yaml`, onde o AMCL está com `tf_broadcast: false`:
     ele roda mas NÃO controla a TF;
-  - um `static_transform_publisher` publica `map -> odom` na pose de spawn (0,6).
+  - um `static_transform_publisher` publica `map -> odom` identidade (a odom do
+    Gazebo já está no frame do mundo, que coincide com o mapa).
     Como a odometria do Gazebo é exata, a posição do robô fica cravada e o Nav2
     navega liso (sem as recuperações/abortos do AMCL em casa aberta);
   - `pose_tf_bridge` lê a TF real (`map -> base_footprint`) e publica em
@@ -102,12 +103,16 @@ def generate_launch_description():
         )
     ])
 
-    # 4) TF estática map->odom na pose de spawn (0,6) — a localização "cravada".
+    # 4) TF estática map->odom IDENTIDADE — a localização "cravada".
+    #    A odometria do diff_drive do Gazebo já sai em coordenadas do MUNDO
+    #    (odom começa em (0,6), não em (0,0)), e mapa = mundo do Blender. Publicar
+    #    map->odom = (0,6) somava o spawn DUAS vezes: o robô aparecia em y≈12 no
+    #    mapa/Godot (fora da casa) e o laser não batia com o mapa.
     #    (O AMCL está com tf_broadcast:false no nav2_params_simples.yaml, então
     #    não há conflito de quem publica map->odom.)
     tf_map_odom = Node(
         package="tf2_ros", executable="static_transform_publisher", name="map_para_odom",
-        arguments=["--x", "0.0", "--y", "6.0", "--z", "0.0",
+        arguments=["--x", "0.0", "--y", "0.0", "--z", "0.0",
                    "--yaw", "0.0", "--pitch", "0.0", "--roll", "0.0",
                    "--frame-id", "map", "--child-frame-id", "odom"],
         parameters=[{"use_sim_time": use_sim_time}],
