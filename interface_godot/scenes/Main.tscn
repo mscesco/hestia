@@ -47,8 +47,9 @@ shadow_enabled = true
 [node name="Casa" parent="." unique_id=1992984308 instance=ExtResource("2_vcsgt")]
 
 [node name="CameraVisao" type="Camera3D" parent="." unique_id=529531899]
-transform = Transform3D(1, 0, 0, 0, 0.7432942, 0.66896474, 0, -0.66896474, 0.7432942, -1.1572456, 19.052671, 6.590045)
+transform = Transform3D(1, 0, 0, 0, 0.7432942, 0.66896474, 0, -0.66896474, 0.7432942, -1.0, 18.66, 15.07)
 current = true
+fov = 50.0
 
 [node name="Robo" type="Node3D" parent="." unique_id=271319408]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
@@ -64,7 +65,7 @@ mesh = SubResource("BoxMesh_qmy6f")
 surface_material_override/0 = SubResource("ShaderMaterial_bjd11")
 
 [node name="CamRobo" type="Camera3D" parent="Robo" unique_id=913283431]
-transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 0, 0.45, 0)
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 0.4, 0.85, 0)
 
 [node name="RemoteOlho" type="RemoteTransform3D" parent="Robo/CamRobo"]
 remote_path = NodePath("../../../OlhoViewport/OlhoCam")

@@ -21,6 +21,14 @@ var _token: String = ""
 var _pendentes: Array = []
 var _tb: float = 0.0
 
+# câmeras: 0=visão geral (fixa), 1=3ª pessoa (segue o robô), 2=1ª pessoa (olhos)
+var _cam_geral: Camera3D
+var _cam_robo: Camera3D
+var _cam3: Camera3D
+var _btn_cam: Button
+var _modos: Array = ["Visão geral", "3ª pessoa", "1ª pessoa"]
+var _modo: int = 0
+
 func _ready() -> void:
 	_robo = get_node_or_null("Robo")
 	_status_label = get_node_or_null("HUD/Controles/VB/Status")
@@ -40,6 +48,7 @@ func _ready() -> void:
 	_ligar_botao("HUD/Controles/VB/BtnQueda", "queda", "EMERGENCIA", -7.9, 11.45)
 	_ligar_botao("HUD/Controles/VB/BtnSala", "ir_sala", "PEDIDO_COMUM", -7.9, -1.8)
 
+	_setup_cameras()
 	_autenticar()
 	print("[Ponte] Interface Hestia iniciada. Lendo ", url_base, "/status")
 
@@ -53,8 +62,10 @@ func _sb(cor: Color, raio: int = 10, margem: float = 12.0) -> StyleBoxFlat:
 
 func _estilo_botao(caminho: String, cor: Color, cor_hover: Color) -> void:
 	var b := get_node_or_null(caminho)
-	if b == null:
-		return
+	if b != null:
+		_estilo_botao_node(b, cor, cor_hover)
+
+func _estilo_botao_node(b, cor: Color, cor_hover: Color) -> void:
 	b.add_theme_stylebox_override("normal", _sb(cor, 10, 10.0))
 	b.add_theme_stylebox_override("hover", _sb(cor_hover, 10, 10.0))
 	b.add_theme_stylebox_override("pressed", _sb(cor.darkened(0.18), 10, 10.0))
@@ -62,6 +73,60 @@ func _estilo_botao(caminho: String, cor: Color, cor_hover: Color) -> void:
 	b.add_theme_color_override("font_color", Color(1, 1, 1))
 	b.add_theme_color_override("font_hover_color", Color(1, 1, 1))
 	b.add_theme_font_size_override("font_size", 16)
+
+# ---------------- câmeras (visão geral / 3ª pessoa / 1ª pessoa) ----------------
+func _setup_cameras() -> void:
+	_cam_geral = get_node_or_null("CameraVisao")
+	_cam_robo = get_node_or_null("Robo/CamRobo")
+	if _robo:
+		_cam3 = Camera3D.new()
+		_cam3.name = "CamTerceira"
+		_cam3.fov = 60.0
+		_cam3.current = false
+		_robo.add_child(_cam3)
+	var vb := get_node_or_null("HUD/Controles/VB")
+	if vb:
+		_btn_cam = Button.new()
+		_btn_cam.name = "BtnCamera"
+		_btn_cam.custom_minimum_size = Vector2(0, 38)
+		vb.add_child(_btn_cam)
+		if _feedback:
+			vb.move_child(_btn_cam, _feedback.get_index())  # botão antes do feedback
+		_estilo_botao_node(_btn_cam, Color(0.20, 0.22, 0.28), Color(0.29, 0.32, 0.40))
+		_btn_cam.pressed.connect(_ciclar_camera)
+	_aplicar_modo()
+
+func _ciclar_camera() -> void:
+	_modo = (_modo + 1) % _modos.size()
+	_aplicar_modo()
+
+func _aplicar_modo() -> void:
+	match _modo:
+		1:
+			if _cam3:
+				_atualizar_cam3()
+				_cam3.current = true
+		2:
+			if _cam_robo:
+				_cam_robo.current = true
+		_:
+			if _cam_geral:
+				_cam_geral.current = true
+	if _btn_cam:
+		_btn_cam.text = "🎥  Câmera: " + str(_modos[_modo])
+
+func _atualizar_cam3() -> void:
+	# posiciona a câmera atrás e acima do robô, olhando para ele (chase cam)
+	if _cam3 == null or _robo == null:
+		return
+	var fwd: Vector3 = _robo.global_transform.basis.x.normalized()  # frente = +X local
+	var alvo: Vector3 = _robo.global_position + Vector3(0, 0.4, 0)
+	_cam3.global_position = alvo - fwd * 3.5 + Vector3(0, 2.2, 0)
+	_cam3.look_at(alvo, Vector3.UP)
+
+func _input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_C:
+		_ciclar_camera()
 
 func _estilizar_hud() -> void:
 	# card do painel
@@ -135,6 +200,8 @@ func _process(delta: float) -> void:
 	if _banner and _banner.visible:
 		_tb += delta
 		_banner.modulate.a = 0.75 + 0.25 * sin(_tb * 6.0)
+	if _modo == 1:
+		_atualizar_cam3()  # mantém a 3ª pessoa seguindo o robô
 
 # ---------------- polling de status (pose + atividade) ----------------
 func _poll() -> void:

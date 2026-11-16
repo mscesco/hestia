@@ -16,12 +16,16 @@ extends Node3D
 
 @export_group("Modelo externo (novo robô)")
 @export var modelo_path: String = "res://models/miniRobot.glb"
-# miniRobot.glb nasce com ~4.74 m de altura (gigante). 0.14 o deixa com ~0.65 m,
-# parecido com a cápsula que ele substitui. Afine no Inspector olhando a cena.
-@export var modelo_escala: float = 0.14                # ajuste o tamanho aqui
-@export var modelo_rotacao_graus: Vector3 = Vector3.ZERO   # gire em Y se olhar p/ o lado errado
-# desce o modelo p/ os "pés" encostarem no chão (o pivô do .glb não está nos pés).
-@export var modelo_offset: Vector3 = Vector3(0.0, -0.12, 0.0)
+# miniRobot.glb nasce com ~4.74 m (gigante). 0.28 o deixa com ~1.3 m (altura de
+# um assistente de pé) — bem visível no ambiente. Afine no Inspector.
+@export var modelo_escala: float = 0.28                # ajuste o tamanho aqui
+# Alinha a frente do modelo com a direção de movimento (+X, onde o theta aponta).
+# A cara do modelo nasce apontando +Z (convenção do export Blender->glTF), então
+# +90° em Y a traz para +X. Se ainda ficar errado: 270/-90 = costas pra frente;
+# 0 ou 180 = de lado.
+@export var modelo_rotacao_graus: Vector3 = Vector3(0.0, 90.0, 0.0)
+# desce/levanta o modelo p/ os "pés" encostarem no chão (pivô do .glb não está nos pés).
+@export var modelo_offset: Vector3 = Vector3(0.0, 0.11, 0.0)
 
 var _mat: ShaderMaterial
 var _luz_emergencia: OmniLight3D
